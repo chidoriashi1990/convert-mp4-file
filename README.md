@@ -11,3 +11,12 @@ $ source .venv/bin/activate
 ```sh
 $ pip install -r requirements.txt
 ```
+
+## Usage
+```sh
+$ python convert-mp4-file.py
+```
+
+```sh
+$ deactivate
+```
