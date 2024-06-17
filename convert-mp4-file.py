@@ -1,43 +1,58 @@
 import cv2
 
-# 入力ビデオ名
-input_video_name = "input_video.mp4"
-# 出力ビデオ名
-output_video_name = "output_video.mp4"
-# 幅の指定
-new_width = 500
-# フレームレートの指定
-new_fps = 30
+basefilename = "sample.mp4"
 
-video = cv2.VideoCapture(input_video_name)
+# 入力動画ファイル名
+input_file = basefilename
 
-# フレームレートの確認
-fps_setting = video.get(cv2.CAP_PROP_FPS)
-print("FPS(Setting):", '{:11.02f}'.format(fps_setting))
+# 出力動画ファイル名
+output_file = "output-" + basefilename
 
-# ビデオの高さと幅を取得
-width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+# 入力動画ファイルを開く
+cap = cv2.VideoCapture(input_file)
 
-# アスペクト比を保ったまま高さを計算
-new_height = int(height * (new_width / width))
+# 動画のFPSを取得
+fps = cap.get(cv2.CAP_PROP_FPS)
 
-# リサイズ後のビデオを保存するためのオブジェクトを作成
-output_video = cv2.VideoWriter(
-    output_video_name,
-    cv2.VideoWriter_fourcc(*'mp4v'),
-    new_fps,
-    (new_width, new_height)
-)
+# 出力動画のFPSを設定
+output_fps = 5
 
-# ビデオをフレームごとに読み込んでリサイズし、新しいビデオに書き込み
-while True:
-    ret, frame = video.read()
+# 出力動画のフレームサイズを設定
+frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+# 出力動画のコーデックを設定
+fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+
+# 出力動画ファイルを作成
+out = cv2.VideoWriter(output_file, fourcc, output_fps, (frame_width, frame_height))
+
+# フレームカウンターの初期化
+frame_count = 0
+
+# フレームが読み込める限りループ
+while cap.isOpened():
+    # フレームを読み込む
+    ret, frame = cap.read()
+
     if not ret:
         break
-    resized_frame = cv2.resize(frame, (new_width, new_height))
-    output_video.write(resized_frame)
 
-# ビデオを閉じてリソースを解放
-video.release()
-output_video.release()
+    # 30fpsから5fpsに間引く
+    if frame_count % int(fps / output_fps) == 0:
+        # フレームを出力動画に書き込む
+        out.write(frame)
+
+    # フレームカウンターを増やす
+    frame_count += 1
+
+    # キーボード入力を待機し、'q'が押されたらループを終了する
+    if cv2.waitKey(1) & 0xFF == ord("q"):
+        break
+
+# メモリを解放する
+cap.release()
+out.release()
+
+# ウィンドウを全て閉じる
+cv2.destroyAllWindows()
